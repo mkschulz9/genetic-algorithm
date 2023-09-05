@@ -2,15 +2,39 @@ import random
 import math
 from scipy.spatial.distance import euclidean
 
+# opens the input file and reads its content
+# input: none
+# output: a list containing the number of cities and a list of tuples containing the coordinates of each city
+def openInputFile():
+    cityCoordinates = []
+
+    # Open the file and read its content
+    with open("./io/inputs/input1.txt", "r") as file:
+        numberOfCities = int(file.readline().strip())
+
+        for line in file:
+            x, y, z = map(int, line.strip().split())
+            cityCoordinates.append((x, y, z))
+            
+    print("NUMBER OF CITIES:", numberOfCities)
+
+    return [numberOfCities, cityCoordinates]
+
 # calculates the Euclidean distance between two points
 # input: two tuples of any dimension
 # output: the Euclidean distance between the two points
 def calculateDistance(coordinate1, coordinate2): return(euclidean(coordinate1, coordinate2))
 
-
-def createInitialPopulation(size, cities):
-    # Generate the initial population of paths
-    # currently working on this
+# generates a list of initial paths
+# input: the number of paths to generate, the number of cities, list of city coordinates
+# output: list of paths = size
+def generateInitialPopulation(size, numberOfCities, cityList):
+    population = []
+    for i in range(size):
+        population.append(random.sample(cityList, numberOfCities))
+        population[i].append(population[i][0])
+    print("INITIAL POPULATION GENERATED.", "SIZE:", size)
+    return(population)
 
 def rank_population(population):
     # Evaluate the fitness of each individual in the population
@@ -70,7 +94,10 @@ def genetic_algorithm():
         # ...
 
 def test():
-    print(calculateDistance((0, 0, -1, 300), (10, 100, 30, 5)))
+    # print(calculateDistance((0, 0, -1), (10, 100, 30)))
+    numberOfCitiesAndCityList = openInputFile()
+    initialPopulationSize = 20
+    print(generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], numberOfCitiesAndCityList[1]))
     
 if __name__ == "__main__":
     test()

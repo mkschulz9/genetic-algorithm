@@ -13,7 +13,7 @@ This project is implemented entirely from scratch in Python.
 
 ## Genetic Algorithm
 
-## Implementation of Genetic Algorithm (main.py)
+## Implementation of Genetic Algorithm (main.py LINK MAIN)
 ### Key Functions:
 #### calculateDistance()
 - Accepts two coordinates of any dimension and returns the Euclidean distance between the two points. In this project’s scope, it is used to calculate the distance between two cities in the 3D space.

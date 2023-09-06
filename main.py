@@ -38,13 +38,14 @@ def generateInitialPopulation(size, numberOfCities, cityList): # check back here
     seenPaths = set()
     
     while len(population) < size:
-        path = random.sample(cityList, numberOfCities)
-        pathTuple = tuple(path)
+        newPath = random.sample(cityList[1:], numberOfCities - 1)
+        newPathStr = tuple(newPath)
         
-        if pathTuple not in seenPaths:
-            seenPaths.add(pathTuple)
-            path.append(path[0])
-            population.append(path)
+        if newPathStr not in seenPaths:
+            newPath.insert(0, cityList[0])
+            newPath.append(cityList[0])
+            seenPaths.add(newPathStr)
+            population.append(newPath)
             
     printWithNewline(f"INITIAL POPULATION GENERATED (SIZE: {size})")
     return population
@@ -62,16 +63,28 @@ def rankPopulation(sizeOfPopulation, population, numberOfCities):
         rankedPopulation.append([population[i], totalDistance])
     
     rankedPopulation.sort(key=lambda x: x[1])
-    printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]})")
-    return rankedPopulation # change rank function to only return the nth best paths (no need to pass back all paths)
+    printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f})")
+    return rankedPopulation # change rank function to only return the nth best paths (no need to pass back all paths), also when new paths get added we can drop the worst paths
 
-def create_mating_pool(population, rank_list):
-    # Select parents for crossover
-    pass
+# creates a mating pool from the ranked population
+# input: percentage of population to pull from ranked population, ranked population
+# output: top X% of ranked population
+def createMatingPool(percentage, rankedPopulation):
+    matingPool = []
+    matingPoolSize = math.ceil(len(rankedPopulation) * percentage)
+    
+    for i in range(matingPoolSize):
+        matingPool.append(rankedPopulation[i][0])
+    
+    printWithNewline(f"MATING POOL CREATED (SIZE: {matingPoolSize})")
+    return matingPool
 
-def crossover(parent1, parent2, start_index, end_index):
-    # Implement two-point crossover
-    pass
+# generates a new pool of 'children' from the mating pool by interchanging the 'genes' of two 'parents'
+# input: the number of children to generate, the mating pool
+# output: a new pool of valid children (starts and ends at the same city, while visiting each city once)
+#def generateNewGeneration(numberOfChildren, matingPool):
+    
+    
 
 def mutate(child):
     # Implement mutation
@@ -122,11 +135,12 @@ def test():
     # printWithNewline(calculateDistance((0, 0, -1), (10, 100, 30)))
     numberOfCitiesAndCityList = openInputFile()
     initialPopulationSize = 5000
-    rankPopulation(initialPopulationSize, generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], 
+    rankedPopulation = rankPopulation(initialPopulationSize, generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], 
                                                                                      numberOfCitiesAndCityList[1]), numberOfCitiesAndCityList[0])
+    createMatingPool(0.5, rankedPopulation)
     
-    # printWithNewline(rankPopulation(initialPopulationSize, generateInitialPopulation(initialPopulationSize, 5, [(0, 0, 0), (10, 0, 30), (20, 0, 60), (30, 0, 90), (40, 0, 120)]), 5))
     
+        
 if __name__ == "__main__":
     test()
     #genetic_algorithm()

@@ -1,6 +1,7 @@
 import random
 import math
 from scipy.spatial.distance import euclidean
+import time
 
 # change defualt behavior of print function to print a new line after each call
 def printWithNewline(*args, **kwargs):
@@ -36,6 +37,13 @@ def calculateDistance(coordinate1, coordinate2): return(euclidean(coordinate1, c
 def generateInitialPopulation(size, numberOfCities, cityList): # check back here to try optimizing & think about heuristic to use (Check back to see if uniqueness matters & to generate a better population, maybe once half of the size of pop is generated, find the average distance for each already egenerated path, and only accept new paths below that average, etc.)
     population = []
     seenPaths = set()
+    starTime = time.time()
+
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time:.6f} seconds")
+
     
     while len(population) < size:
         newPath = random.sample(cityList[1:], numberOfCities - 1)
@@ -51,12 +59,12 @@ def generateInitialPopulation(size, numberOfCities, cityList): # check back here
     return population
 
 # calculates the total distance of each path in the population and orders them from shortest to longest
-# input: size of population, population list, number of cities to visit
+# input: population list, number of cities to visit
 # output: ranked list of population
-def rankPopulation(sizeOfPopulation, population, numberOfCities):
+def rankPopulation(population, numberOfCities):
     rankedPopulation = []
     
-    for i in range(sizeOfPopulation): # check back here to try optimizing
+    for i in range(len(population)): # check back here to try optimizing
         totalDistance = 0
         for j in range(numberOfCities):
             totalDistance += calculateDistance(population[i][j], population[i][j+1])
@@ -82,65 +90,66 @@ def createMatingPool(percentage, rankedPopulation):
 # generates a new pool of 'children' from the mating pool by interchanging the 'genes' of two 'parents'
 # input: the number of children to generate, the mating pool
 # output: a new pool of valid children (starts and ends at the same city, while visiting each city once)
-#def generateNewGeneration(numberOfChildren, matingPool):
+def generateChildren(percentage, matingPool):
+    children = []
+    numberOfChildren = math.ceil(len(matingPool) * percentage)
     
+    while len(children) < numberOfChildren:
+        parent1 = random.choice(matingPool) # check back here to try optimizing -> pick higher ranked parents more often
+        parent2 = random.choice(matingPool)
+
+        if parent1 != parent2:
+            crossoverPoint1, crossoverPoint2 = sorted(random.sample(range(1, len(parent1) - 1), 2))
+
+            # Create slices from parent1 between crossover points
+            temporaryChild = parent1[crossoverPoint1:crossoverPoint2]
+
+            # Get the remaining elements from parent2
+            remainingElements = [item for item in parent2 if item not in temporaryChild]
+
+            # Concatenate to get the child
+            child = remainingElements[:crossoverPoint1] + temporaryChild + remainingElements[crossoverPoint1:]
+
+            # Ensuring start and end points remain the same as parents
+            child[0] = parent1[0]
+            child[-1] = parent1[-1]
+
+            children.append(child)
     
+    printWithNewline(f"CHILDREN GENERATED (SIZE: {numberOfChildren})")        
+    return children
 
 def mutate(child):
     # Implement mutation
     pass
 
-def genetic_algorithm():
-    # Main Genetic Algorithm function
-    
-    # Initialize parameters
-    population_size = 100
-    cities = []  # Example: [(0,0,0), (10,0,30), ...]
-    
-    # Step 1: Create initial population
-    population = create_initial_population(population_size, cities)
-    
-    # Step 2: Evaluate the initial population
-    rank_list = rank_population(population)
-    
-    # Main GA loop
-    generations = 1000
-    for i in range(generations):
-        
-        # Step 3: Parent Selection
-        mating_pool = create_mating_pool(population, rank_list)
-        
-        # Step 4: Crossover and Mutation
-        new_population = []
-        for j in range(0, len(mating_pool), 2):
-            parent1 = mating_pool[j]
-            parent2 = mating_pool[j+1]
-            
-            # Perform crossover
-            child = crossover(parent1, parent2, 1, 3)
-            
-            # Perform mutation
-            child = mutate(child)
-            
-            new_population.append(child)
-        
-        # Step 5: Evaluate and replace population
-        population = new_population
-        rank_list = rank_population(population)
-        
-        # Optionally print or store the best path found so far
-        # ...
-
-def test():
-    # printWithNewline(calculateDistance((0, 0, -1), (10, 100, 30)))
+# this funciton runs the high-level genetic algorithm
+# input: number of generations to run
+# output: the best path found and its details
+def geneticAlgorithm(numberOfGenerations):
+    #open input file
     numberOfCitiesAndCityList = openInputFile()
+    # generate initial population
     initialPopulationSize = 5000
-    rankedPopulation = rankPopulation(initialPopulationSize, generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], 
-                                                                                     numberOfCitiesAndCityList[1]), numberOfCitiesAndCityList[0])
-    createMatingPool(0.5, rankedPopulation)
+    population = generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], numberOfCitiesAndCityList[1])
+    
+    # generation loop
+    for i in range(numberOfGenerations):
+        printWithNewline(f"***CURRENT GENERATION: {i+1}/{numberOfGenerations}")
+        # rank population
+        rankedPopulation = rankPopulation(population, numberOfCitiesAndCityList[0])
+        # create mating pool
+        matingPool = createMatingPool(0.5, rankedPopulation)
+        # generate children
+        children = generateChildren(0.5, matingPool)
+        # rank children
+        print("CHILDREN")
+        rankPopulation(children, numberOfCitiesAndCityList[0])
+        # add children to population
+        population.extend(children)
     
     
-        
+    printWithNewline("BEST PATH FOUND: {}")
+    return population[0] 
 if __name__ == "__main__":
-    test()
-    #genetic_algorithm()
+    geneticAlgorithm(10)

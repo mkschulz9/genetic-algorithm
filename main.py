@@ -37,13 +37,7 @@ def calculateDistance(coordinate1, coordinate2): return(euclidean(coordinate1, c
 def generateInitialPopulation(size, numberOfCities, cityList): # check back here to try optimizing & think about heuristic to use (Check back to see if uniqueness matters & to generate a better population, maybe once half of the size of pop is generated, find the average distance for each already egenerated path, and only accept new paths below that average, etc.)
     population = []
     seenPaths = set()
-    starTime = time.time()
-
-    end_time = time.time()
-
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time: {elapsed_time:.6f} seconds")
-
+    startTime = time.time()
     
     while len(population) < size:
         newPath = random.sample(cityList[1:], numberOfCities - 1)
@@ -54,15 +48,19 @@ def generateInitialPopulation(size, numberOfCities, cityList): # check back here
             newPath.append(cityList[0])
             seenPaths.add(newPathStr)
             population.append(newPath)
-            
-    printWithNewline(f"INITIAL POPULATION GENERATED (SIZE: {size})")
+    
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+        
+    printWithNewline(f"INITIAL POPULATION GENERATED (SIZE: {size}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return population
 
 # calculates the total distance of each path in the population and orders them from shortest to longest
-# input: population list, number of cities to visit
+# input: population list, number of cities to visit, initial population size
 # output: ranked list of population
-def rankPopulation(population, numberOfCities):
+def rankPopulation(population, numberOfCities, initialPopulationSize):
     rankedPopulation = []
+    startTime = time.time()
     
     for i in range(len(population)): # check back here to try optimizing
         totalDistance = 0
@@ -71,7 +69,15 @@ def rankPopulation(population, numberOfCities):
         rankedPopulation.append([population[i], totalDistance])
     
     rankedPopulation.sort(key=lambda x: x[1])
-    printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f})")
+    
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+    
+    # reduce population size if its over the initial population size (optimization)
+    if len(rankedPopulation) > initialPopulationSize:
+        rankedPopulation = rankedPopulation[:initialPopulationSize]
+        
+    printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return rankedPopulation # change rank function to only return the nth best paths (no need to pass back all paths), also when new paths get added we can drop the worst paths
 
 # creates a mating pool from the ranked population
@@ -80,11 +86,15 @@ def rankPopulation(population, numberOfCities):
 def createMatingPool(percentage, rankedPopulation):
     matingPool = []
     matingPoolSize = math.ceil(len(rankedPopulation) * percentage)
+    startTime = time.time()
     
     for i in range(matingPoolSize):
         matingPool.append(rankedPopulation[i][0])
     
-    printWithNewline(f"MATING POOL CREATED (SIZE: {matingPoolSize})")
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+    
+    printWithNewline(f"MATING POOL CREATED (SIZE: {matingPoolSize}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return matingPool
 
 # generates a new pool of 'children' from the mating pool by interchanging the 'genes' of two 'parents'
@@ -93,6 +103,7 @@ def createMatingPool(percentage, rankedPopulation):
 def generateChildren(percentage, matingPool):
     children = []
     numberOfChildren = math.ceil(len(matingPool) * percentage)
+    startTime = time.time()
     
     while len(children) < numberOfChildren:
         parent1 = random.choice(matingPool) # check back here to try optimizing -> pick higher ranked parents more often
@@ -116,7 +127,10 @@ def generateChildren(percentage, matingPool):
 
             children.append(child)
     
-    printWithNewline(f"CHILDREN GENERATED (SIZE: {numberOfChildren})")        
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+    
+    printWithNewline(f"CHILDREN GENERATED (SIZE: {numberOfChildren}, TIME TAKEN: {elapsedTime:.4f} seconds)")        
     return children
 
 def mutate(child):
@@ -127,8 +141,10 @@ def mutate(child):
 # input: number of generations to run
 # output: the best path found and its details
 def geneticAlgorithm(numberOfGenerations):
+    printWithNewline("***GENETIC ALGORITHM STARTED")
     #open input file
     numberOfCitiesAndCityList = openInputFile()
+    startTime = time.time()
     # generate initial population
     initialPopulationSize = 5000
     population = generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], numberOfCitiesAndCityList[1])
@@ -137,19 +153,22 @@ def geneticAlgorithm(numberOfGenerations):
     for i in range(numberOfGenerations):
         printWithNewline(f"***CURRENT GENERATION: {i+1}/{numberOfGenerations}")
         # rank population
-        rankedPopulation = rankPopulation(population, numberOfCitiesAndCityList[0])
+        rankedPopulation = rankPopulation(population, numberOfCitiesAndCityList[0], initialPopulationSize)
+        if i == 0:
+            initialBestPathDistance = rankedPopulation[0][1]
         # create mating pool
         matingPool = createMatingPool(0.5, rankedPopulation)
         # generate children
         children = generateChildren(0.5, matingPool)
-        # rank children
-        print("CHILDREN")
-        rankPopulation(children, numberOfCitiesAndCityList[0])
         # add children to population
         population.extend(children)
+        
+    endTime = time.time()
+    elapsedTime = endTime - startTime
+    percentImprovement = ((initialBestPathDistance - rankedPopulation[0][1]) / initialBestPathDistance) * 100
     
-    
-    printWithNewline("BEST PATH FOUND: {}")
+    printWithNewline(f"***GENETIC ALGORITHM COMPLETE\nTIME TAKEN: {elapsedTime:.4f} seconds\nINITIAL BEST PATH DISTANCE: {initialBestPathDistance:.4f}\nENDING BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}\nPERCENT IMPROVEMENT: {percentImprovement:.2f}%\nBEST PATH: {rankedPopulation[0][0]}")
     return population[0] 
+
 if __name__ == "__main__":
     geneticAlgorithm(10)

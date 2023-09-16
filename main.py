@@ -3,19 +3,19 @@ import math
 from scipy.spatial.distance import euclidean
 import time
 
-# change defualt behavior of print function to print a new line after each call
+# change defualt behavior of print function to print a new line after each call (remove before submitting)
 def printWithNewline(*args, **kwargs):
     kwargs['end'] = kwargs.get('end', '\n') + '\n'
     print(*args, **kwargs)
 
 # opens the input file and reads its content
 # input: none
-# output: a list containing the number of cities and a list of tuples containing the coordinates of each city
+# output: [number of cities to visit, list of city coordinates (x, y, z)]
 def openInputFile():
     cityCoordinates = []
 
     # open the file and read its content
-    with open("./input.txt", "r") as file:
+    with open("./io/inputs/input1.txt", "r") as file:
         numberOfCities = int(file.readline().strip())
 
         for line in file:
@@ -31,53 +31,75 @@ def openInputFile():
 # output: the Euclidean distance between the two points
 def calculateDistance(coordinate1, coordinate2): return(euclidean(coordinate1, coordinate2))
 
-# generates a list of initial paths
-# input: the number of paths to generate, the number of cities, list of city coordinates
+# finds the top N nearest cities to the current city
+# input: the current city, the list of unvisited cities, the number of nearest cities to find
+# output: a list of the top N nearest cities to the current city
+def getTopNNearestCities(currentCity, unvisitedCities, N):
+    distances = [(city, calculateDistance(currentCity, city)) for city in unvisitedCities]
+    distances.sort(key=lambda x: x[1])
+    nearestCities = [x[0] for x in distances[:min(N, len(distances))]]
+    return nearestCities
+
+# generates a list of initial paths using nearest neighbor with randomization heuristic
+# input: the starting city, the list of city coordinates, the randomization factor
 # output: list of unique paths = size
-def generateInitialPopulation(size, numberOfCities, cityList): # check back here to try optimizing & think about heuristic to use (Check back to see if uniqueness matters & to generate a better population, maybe once half of the size of pop is generated, find the average distance for each already egenerated path, and only accept new paths below that average, etc.)
+def nearestNeighborWithRandomization(startCity, cityList, randomFactor):
+    unvisitedCities = set(cityList) - {startCity}
+    currentCity = startCity
+    path = [startCity]
+    
+    while unvisitedCities:
+        nearestCities = getTopNNearestCities(currentCity, unvisitedCities, randomFactor)
+        nextCity = random.choice(nearestCities)
+        path.append(nextCity)
+        unvisitedCities.remove(nextCity)
+        currentCity = nextCity
+
+    path.append(startCity)
+    return path
+
+# generates a list of initial paths
+# input: the size of the initial population, the list of city coordinates
+# output: list of unique paths = size
+def generateInitialPopulation(size, cityList):
     population = []
     seenPaths = set()
     startTime = time.time()
+    randomFactor = 3
+    startCity = cityList[0]
     
     while len(population) < size:
-        newPath = random.sample(cityList[1:], numberOfCities - 1)
+        newPath = nearestNeighborWithRandomization(startCity, cityList, randomFactor)
         newPathStr = tuple(newPath)
         
         if newPathStr not in seenPaths:
-            newPath.insert(0, cityList[0])
-            newPath.append(cityList[0])
             seenPaths.add(newPathStr)
             population.append(newPath)
     
     endTime = time.time()
     elapsedTime = endTime - startTime
-        
-    printWithNewline(f"INITIAL POPULATION GENERATED (SIZE: {size}, TIME TAKEN: {elapsedTime:.4f} seconds)")
+    
+    print(f"INITIAL POPULATION GENERATED (SIZE: {size}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return population
 
 # calculates the total distance of each path in the population and orders them from shortest to longest
 # input: population list, number of cities to visit, initial population size
 # output: ranked list of population
 def rankPopulation(population, numberOfCities, initialPopulationSize):
-    rankedPopulation = []
     startTime = time.time()
-    
-    for i in range(len(population)): # check back here to try optimizing
-        totalDistance = 0
-        for j in range(numberOfCities):
-            totalDistance += calculateDistance(population[i][j], population[i][j+1])
-        rankedPopulation.append([population[i], totalDistance])
-    
+
+    rankedPopulation = [
+        [path, sum(calculateDistance(path[j], path[j+1]) for j in range(numberOfCities))]
+        for path in population
+    ]
+
     rankedPopulation.sort(key=lambda x: x[1])
+    rankedPopulation = rankedPopulation[:initialPopulationSize]
     
     endTime = time.time()
     elapsedTime = endTime - startTime
     
-    # reduce population size if its over the initial population size (optimization)
-    if len(rankedPopulation) > initialPopulationSize:
-        rankedPopulation = rankedPopulation[:initialPopulationSize]
-        
-    printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}, TIME TAKEN: {elapsedTime:.4f} seconds)")
+    print(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return rankedPopulation # change rank function to only return the nth best paths (no need to pass back all paths), also when new paths get added we can drop the worst paths
 
 # creates a mating pool from the ranked population using  Roulette wheel-based selection
@@ -124,20 +146,14 @@ def generateChildren(percentage, matingPool):
 
         if parent1 != parent2:
             crossoverPoint1, crossoverPoint2 = sorted(random.sample(range(1, len(parent1) - 1), 2))
-
-            # Create slices from parent1 between crossover points
             temporaryChild = parent1[crossoverPoint1:crossoverPoint2]
-
-            # Get the remaining elements from parent2
+            
             remainingElements = [item for item in parent2 if item not in temporaryChild]
-
-            # Concatenate to get the child
+            
             child = remainingElements[:crossoverPoint1] + temporaryChild + remainingElements[crossoverPoint1:]
-
-            # Ensuring start and end points remain the same as parents
             child[0] = parent1[0]
             child[-1] = parent1[-1]
-
+            
             children.append(child)
     
     endTime = time.time()
@@ -150,29 +166,47 @@ def mutate(child):
     # Implement mutation
     pass
 
-# this funciton runs the high-level genetic algorithm
-# input: number of generations to run
+# runs the high-level genetic algorithm
+# input: none
 # output: the best path found and its details
-def geneticAlgorithm(numberOfGenerations):
+def geneticAlgorithm():
     printWithNewline("***GENETIC ALGORITHM STARTED")
-    #open input file
+    # open input file
     numberOfCitiesAndCityList = openInputFile()
+    
+    # hyper-parameter selection
+    if (numberOfCitiesAndCityList[0] < 51):
+        initialPopulationSize = 2000
+        childrenGenerationPercent = 4
+        matingPoolPercent = 0.15
+        generations = 10
+    elif (numberOfCitiesAndCityList[0] < 101):
+        initialPopulationSize = 1000
+        childrenGenerationPercent = 4
+        matingPoolPercent = 0.15
+        generations = 12
+    elif (numberOfCitiesAndCityList[0] < 201):
+        initialPopulationSize = 500
+        childrenGenerationPercent = 4
+        matingPoolPercent = 0.15 
+        generations = 15
+    else:
+        initialPopulationSize = 500 # account for larger population size
+        
     startTime = time.time()
-    # generate initial population
-    initialPopulationSize = 500
-    population = generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], numberOfCitiesAndCityList[1])
+    population = generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[1])
     
     # generation loop
-    for i in range(numberOfGenerations):
-        printWithNewline(f"***CURRENT GENERATION: {i+1}/{numberOfGenerations}")
+    for i in range(generations):
+        printWithNewline(f"***CURRENT GENERATION: {i+1}/{generations}")
         # rank population
         rankedPopulation = rankPopulation(population, numberOfCitiesAndCityList[0], initialPopulationSize)
         if i == 0:
             initialBestPathDistance = rankedPopulation[0][1]
         # create mating pool
-        matingPool = createMatingPool(0.3, rankedPopulation)
+        matingPool = createMatingPool(matingPoolPercent, rankedPopulation)
         # generate children
-        children = generateChildren(2, matingPool)
+        children = generateChildren(childrenGenerationPercent, matingPool)
         # add children to population
         population.extend(children)
         
@@ -192,6 +226,7 @@ def writeToFile(bestPathDistanceAndPath):
         for i in range(len(bestPathDistanceAndPath[1])):
             file.write(f"{bestPathDistanceAndPath[1][i][0]} {bestPathDistanceAndPath[1][i][1]} {bestPathDistanceAndPath[1][i][2]}\n")
 
+# main function
 if __name__ == "__main__":
-    writeToFile(geneticAlgorithm(10))
+    writeToFile(geneticAlgorithm())
    

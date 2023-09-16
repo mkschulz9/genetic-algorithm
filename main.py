@@ -15,7 +15,7 @@ def openInputFile():
     cityCoordinates = []
 
     # open the file and read its content
-    with open("./io/inputs/input1.txt", "r") as file:
+    with open("./input.txt", "r") as file:
         numberOfCities = int(file.readline().strip())
 
         for line in file:
@@ -79,6 +79,19 @@ def rankPopulation(population, numberOfCities, initialPopulationSize):
         
     printWithNewline(f"POPULATION RANKED (BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}, TIME TAKEN: {elapsedTime:.4f} seconds)")
     return rankedPopulation # change rank function to only return the nth best paths (no need to pass back all paths), also when new paths get added we can drop the worst paths
+
+# creates a mating pool from the ranked population using  Roulette wheel-based selection
+# input: percentage of population to pull from ranked population, ranked population
+# output: a list of populations selected for mating (List containspaths)
+
+#def createMatingPool(percentage, rankedPopulation):
+    #atingPool = []
+    
+    
+    
+    
+    #printWithNewline(f"MATING POOL CREATED (SIZE: {matingPoolSize}, TIME TAKEN: {elapsedTime:.4f} seconds)")
+    #return matingPool
 
 # creates a mating pool from the ranked population
 # input: percentage of population to pull from ranked population, ranked population
@@ -146,7 +159,7 @@ def geneticAlgorithm(numberOfGenerations):
     numberOfCitiesAndCityList = openInputFile()
     startTime = time.time()
     # generate initial population
-    initialPopulationSize = 5000
+    initialPopulationSize = 500
     population = generateInitialPopulation(initialPopulationSize, numberOfCitiesAndCityList[0], numberOfCitiesAndCityList[1])
     
     # generation loop
@@ -157,9 +170,9 @@ def geneticAlgorithm(numberOfGenerations):
         if i == 0:
             initialBestPathDistance = rankedPopulation[0][1]
         # create mating pool
-        matingPool = createMatingPool(0.5, rankedPopulation)
+        matingPool = createMatingPool(0.3, rankedPopulation)
         # generate children
-        children = generateChildren(0.5, matingPool)
+        children = generateChildren(2, matingPool)
         # add children to population
         population.extend(children)
         
@@ -168,7 +181,17 @@ def geneticAlgorithm(numberOfGenerations):
     percentImprovement = ((initialBestPathDistance - rankedPopulation[0][1]) / initialBestPathDistance) * 100
     
     printWithNewline(f"***GENETIC ALGORITHM COMPLETE\nTIME TAKEN: {elapsedTime:.4f} seconds\nINITIAL BEST PATH DISTANCE: {initialBestPathDistance:.4f}\nENDING BEST PATH DISTANCE: {rankedPopulation[0][1]:.4f}\nPERCENT IMPROVEMENT: {percentImprovement:.2f}%\nBEST PATH: {rankedPopulation[0][0]}")
-    return population[0] 
+    return (rankedPopulation[0][1], rankedPopulation[0][0]) 
+
+# writes output of the genetic algorithm (path distance and path) to a file
+# input: the best path distance and the best path
+# output: none
+def writeToFile(bestPathDistanceAndPath):
+    with open("./output.txt", "w") as file:
+        file.write(f"{bestPathDistanceAndPath[0]:.3f}\n")
+        for i in range(len(bestPathDistanceAndPath[1])):
+            file.write(f"{bestPathDistanceAndPath[1][i][0]} {bestPathDistanceAndPath[1][i][1]} {bestPathDistanceAndPath[1][i][2]}\n")
 
 if __name__ == "__main__":
-    geneticAlgorithm(10)
+    writeToFile(geneticAlgorithm(10))
+   

@@ -15,7 +15,7 @@ def openInputFile():
     cityCoordinates = []
 
     # open the file and read its content
-    with open("./io/inputs/input1.txt", "r") as file:
+    with open("./io/inputs/input3.txt", "r") as file:
         numberOfCities = int(file.readline().strip())
 
         for line in file:
@@ -179,17 +179,17 @@ def geneticAlgorithm():
         initialPopulationSize = 2000
         childrenGenerationPercent = 4
         matingPoolPercent = 0.15
-        generations = 10
+        generations = 6
     elif (numberOfCitiesAndCityList[0] < 101):
         initialPopulationSize = 1000
         childrenGenerationPercent = 4
         matingPoolPercent = 0.15
-        generations = 12
+        generations = 8
     elif (numberOfCitiesAndCityList[0] < 201):
         initialPopulationSize = 500
         childrenGenerationPercent = 4
         matingPoolPercent = 0.15 
-        generations = 15
+        generations = 11
     else:
         initialPopulationSize = 500 # account for larger population size
         

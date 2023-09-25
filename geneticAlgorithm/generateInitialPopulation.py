@@ -31,7 +31,7 @@ def nearestNeighborWithRandomization(startCity, cityList, randomFactor):
     return path
 
 # Generates an initial population for the Genetic algorithm, verifying each path is unique
-# input: the size of the initial population, the list of cities to visit
+# input: the size of the initial population, the list of cities to visit, the randomization factor
 # output: list of unique paths = size
 def generateInitialPopulation(size, cityList, randomFactor):
     population = []

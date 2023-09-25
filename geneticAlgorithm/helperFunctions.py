@@ -17,7 +17,7 @@ def printWithNewline(*args, **kwargs):
 def openInputFile():
     cityList = []
 
-    with open("./io/inputs/basecase.txt", "r") as file:
+    with open("./io/inputs/input1.txt", "r") as file:
         filePointerStartingPosition = file.tell()
         if file.readline() == "" or file.readline() == "0":
             return (0, [])

@@ -1,14 +1,14 @@
 # 🎓 CSCI-561: Foundations of Artificial Intelligence
 
-## 🗺️ Assignment #1: 3D Travelling Salesman Problem with Genetic Algorithm
+## 🗺️ Assignment #1: 3D Traveling Salesman Problem with Genetic Algorithm
 
-Welcome to the repository for Assignment #1 for CSCI-561, USC's Foundations of Artificial Intelligence graduate course. This project is an exploration of solving the 3D Travelling Salesman Problem (TSP) using a Genetic Algorithm implemented in Python. 
+Welcome to the repository for Assignment #1 for CSCI-561, USC's Foundations of Artificial Intelligence graduate course. This project is an exploration of solving the 3D Traveling Salesman Problem (TSP) using a Genetic Algorithm implemented in Python. 
 
 ---
 
 ## 📋 Table of Contents
 1. [Introduction](#🌟-introduction)
-    - [TSP](#🚗-travelling-salesperson-problem)
+    - [TSP](#🚗-traveling-salesperson-problem)
     - [Genetic Algorithm](#🧬-genetic-algorithm)
 2. [Implementation](#🔨-implementation)
     - [GeneticAlgorithm Class](#geneticalgorithm-class-genetic_algorithmpy)
@@ -20,8 +20,8 @@ Welcome to the repository for Assignment #1 for CSCI-561, USC's Foundations of A
 
 ## 🌟 Introduction
 
-### 🚗 Travelling Salesperson Problem
-The TSP is a classic problem in computer science, considered NP-hard. To learn more, [click here](https://blog.routific.com/blog/travelling-salesman-problem).
+### 🚗 Traveling Salesperson Problem
+The TSP is a classic problem in computer science, considered NP-hard. To learn more, [click here](https://blog.routific.com/blog/traveling-salesman-problem).
 
 ### 🧬 Genetic Algorithm
 The Genetic Algorithm is a heuristic search inspired by the process of natural selection. To learn more, [click here](https://towardsdatascience.com/introduction-to-genetic-algorithms-including-example-code-e396e98d8bf3).
